@@ -1,0 +1,126 @@
+* {
+    box-sizing: border-box
+}
+
+body {
+    margin: 0;
+    background: #080b12;
+    color: #f5f7fb;
+    font-family: system-ui, Arial
+}
+
+.app {
+    max-width: 950px;
+    margin: auto;
+    padding: 20px
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 50px
+}
+
+button {
+    border: 0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-weight: 800;
+    cursor: pointer
+}
+
+header button,
+.download,
+section button {
+    background: #fff;
+    color: #080b12
+}
+
+.hero {
+    text-align: center
+}
+
+h1 {
+    font-size: clamp(40px, 7vw, 72px);
+    margin: 10px 0
+}
+
+.sub {
+    color: #9da7b8
+}
+
+.card {
+    background: #111722;
+    border: 1px solid #253044;
+    border-radius: 20px;
+    padding: 22px;
+    margin: 18px 0
+}
+
+.card1 {
+    background: #b8be0a;
+    border: 1px solid #b9baed;
+    border-radius: 20px;
+    padding: 22px;
+    margin: 18px 0
+}
+
+.row input,
+select {
+    background: #090e16;
+    color: white;
+    border: 1px solid #2a3548;
+    border-radius: 12px;
+    padding: 14px;
+    width: 100%
+}
+
+.row input {
+    flex: 1
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px
+}
+
+.download {
+    width: 100%;
+    margin-top: 10px
+}
+
+.plans {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 18px
+}
+
+.plans .card {
+    margin: 0 0 18px
+}
+
+small {
+    display: block;
+    color: #718097;
+    text-align: center;
+    margin-top: 12px
+}
+
+.item {
+    padding: 12px 0;
+    border-bottom: 1px solid #263044
+}
+
+@media(max-width:600px) {
+    .row,
+    .plans,
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr
+    }
+    .row button {
+        width: 100%
+    }
+}

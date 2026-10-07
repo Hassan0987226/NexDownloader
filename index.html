@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <title>NexDownloader</title>
+    <link rel='stylesheet' href='style.css'>
+</head>
+
+<body>
+    <div class='app'>
+        <header><b>⬇ NexDownloader</b><button onclick='premium()'>💎 Premium $5</button></header>
+        <main>
+            <p>FAST • SIMPLE • CROSS-PLATFORM</p>
+            <h1>Download your media.</h1>
+            <p class='sub'>Free up to 720p. Premium unlocks 1080p+ where available.</p>
+            <section class='card'><label>Media URL</label>
+                <div class='row'><input id='url' placeholder='Paste permitted media URL'><button onclick='analyze()'>Analyze</button></div>
+                <div class='grid'><select id='quality'><option>360p</option><option>480p</option><option selected>720p</option><option>1080p — Premium</option><option>1440p — Premium</option><option>2160p — Premium</option></select><select id='format'><option>MP4</option><option>WebM</option><option>MKV</option><option>MP3</option><option>M4A</option></select></div>
+                <p id='status'>Ready</p><button class='download' onclick='download()'>⬇ Add to Download Queue</button><small>Only download content you own or are authorized to download. DRM/access-control bypass is not supported.</small></section>
+            <div class='plans'>
+                <section class='card'>
+                    <h2>🆓 Free — $0</h2>
+                    <p>✓ Multiple formats<br>✓ 360p–720p<br>✓ Audio formats<br>✓ Queue</p>
+                </section>
+                <section class='card1'>
+                    <h2>💎 Premium — $5</h2>
+                    <p>✓ Everything in Free<br>✓ 1080p+ where available<br>✓ Faster/batch downloads<br>✓ No ads</p><button onclick='premium()'>Upgrade</button></section>
+            </div>
+            <section class='card'>
+                <h2>Download Queue</h2>
+                <div id='queue'>No downloads yet.</div>
+            </section>
+        </main>
+    </div>
+    <script src='app.js'></script>
+</body>
+
+</html>

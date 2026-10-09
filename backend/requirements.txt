@@ -1,9 +1,0 @@
-fastapi
-uvicorn[standard]
-pydantic
-python-dotenv
-PyJWT
-pwdlib[argon2]
-python-multipart
-yt-dlp
-stripe

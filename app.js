@@ -1,24 +1,25 @@
-(() => {
-  'use strict';
-  const KEY = 'nexdownloader.static.queue.v1';
-  const $ = id => document.getElementById(id);
-  let filter = 'all';
-  let queue = [];
-  try { const saved = JSON.parse(localStorage.getItem(KEY) || '[]'); if (Array.isArray(saved)) queue = saved.filter(x => x && typeof x.url === 'string'); } catch {}
-  const escapeHTML = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const filename = url => { try { const p = new URL(url).pathname.split('/').filter(Boolean).pop(); return p ? decodeURIComponent(p) : 'Download link'; } catch { return 'Download link'; } };
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(queue)); } catch { setStatus('Browser storage is full; this link may not be saved.', true); } }
-  function setStatus(message, error=false) { $('status').textContent = message; $('status').classList.toggle('is-error', error); }
-  function render() {
-    const ready = queue.filter(x => !x.opened).length, opened = queue.length-ready;
-    $('count-active').textContent = String(ready); $('count-queued').textContent = String(ready); $('count-completed').textContent = String(opened);
-    $('queue-count').textContent = `${queue.length} ${queue.length === 1 ? 'item' : 'items'}`; $('clear-completed').disabled = opened === 0;
-    const items = queue.filter(x => filter === 'all' || (filter === 'active' && !x.opened) || (filter === 'completed' && x.opened));
-    $('queue').innerHTML = items.length ? items.map(x => `<article class="download-item"><div class="item-topline"><div class="file-meta"><p class="file-name">${escapeHTML(x.filename || filename(x.url))}</p><p class="file-host">${escapeHTML(new URL(x.url).host)}</p></div><span class="item-status ${x.opened ? 'completed' : 'queued'}">${x.opened ? 'opened' : 'ready'}</span></div><div class="progress-line"><span>${x.opened ? 'Link opened' : 'Ready to open source link'}</span><span></span></div><div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${x.opened ? 100 : 0}"><div class="progress-fill" style="width:${x.opened ? 100 : 0}%"></div></div><div class="item-actions"><button class="action-button" data-action="open" data-id="${escapeHTML(x.id)}">${x.opened ? 'Open again' : 'Open / Download'}</button><button class="action-button danger" data-action="remove" data-id="${escapeHTML(x.id)}">Remove</button></div></article>`).join('') : `<div class="empty-state"><div><span class="empty-mark" aria-hidden="true">↓</span><p>${queue.length ? `No ${filter} links.` : 'Nothing in your queue yet.'}</p><span>Your saved links will show up here.</span></div></div>`;
-  }
-  $('download-form').addEventListener('submit', e => { e.preventDefault(); const input=$('url'); let u; try { u=new URL(input.value.trim()); } catch { setStatus('Enter a valid URL starting with https:// or http://.', true); return; } if (!['http:','https:'].includes(u.protocol)) { setStatus('Only HTTP and HTTPS links are supported.', true); return; } if (queue.some(x=>x.url===u.href)) { setStatus('That link is already in your queue.'); return; } queue.unshift({id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,url:u.href,filename:filename(u.href),opened:false}); save(); render(); input.value=''; setStatus('Link added. Tap “Open / Download” to visit its source.'); });
-  $('queue').addEventListener('click', e => { const b=e.target.closest('[data-action]'); if(!b)return; const item=queue.find(x=>x.id===b.dataset.id); if(!item)return; if(b.dataset.action==='remove'){queue=queue.filter(x=>x.id!==item.id);save();render();return;} if(b.dataset.action==='open'){item.opened=true;save();render();setStatus('Source opened in a new tab. If it shows a webpage, that URL is not a direct downloadable file.');window.open(item.url,'_blank','noopener,noreferrer');} });
-  document.querySelector('.filters').addEventListener('click', e => { const b=e.target.closest('[data-filter]'); if(!b)return; filter=b.dataset.filter; document.querySelectorAll('.filter-button').forEach(x=>{const active=x===b;x.classList.toggle('is-selected',active);x.setAttribute('aria-pressed',String(active));});render(); });
-  $('clear-completed').addEventListener('click',()=>{queue=queue.filter(x=>!x.opened);save();render();});
-  render();
-})();
+// Set this to your deployed backend origin, e.g. https://your-api.example.com
+const API_BASE = "";
+const form = document.querySelector('#form');
+const statusEl = document.querySelector('#status');
+const button = document.querySelector('#go');
+function status(message, error=false){statusEl.textContent=message;statusEl.style.color=error?'#fda4af':'#9fb0d0';}
+function isDirect(url){return /\.(mp4|webm|mov|mp3|m4a|wav|ogg|jpg|jpeg|png|webp|gif)(?:$|[?#])/i.test(new URL(url).pathname+new URL(url).search)}
+form.addEventListener('submit', async e=>{
+ e.preventDefault(); const url=document.querySelector('#url').value.trim(); const format=document.querySelector('#format').value;
+ try{new URL(url)}catch{return status('Please paste a valid http/https URL.',true)}
+ if(!/^https?:/i.test(url))return status('Only http and https links are supported.',true);
+ if(format==='photo' && !/\.(jpg|jpeg|png|webp|gif)(?:$|[?#])/i.test(url))return status('For photos, paste a direct image URL ending in .jpg, .png, .webp or .gif.',true);
+ if(isDirect(url)){
+   const a=document.createElement('a');a.href=url;a.download='';a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+   status('Download requested. If the browser opens the file instead, use its Download/Save option. Some servers block cross-site downloads.'); return;
+ }
+ if(!API_BASE){status('This is a social-media post URL. GitHub Pages cannot extract its video. Deploy the backend folder, then set API_BASE in app.js to your backend URL.',true);return;}
+ button.disabled=true;button.textContent='Preparing download…';status('Contacting download service…');
+ try{const res=await fetch(API_BASE.replace(/\/$/,'')+'/api/download',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,format})});
+  const type=res.headers.get('content-type')||'';
+  if(!res.ok){let msg='Download failed.';try{msg=(await res.json()).error||msg}catch{}throw new Error(msg)}
+  if(type.includes('application/json')){const d=await res.json();if(d.download_url){window.location.href=d.download_url;status('Download started.');return}throw new Error(d.error||'The service did not return a file.')}
+  const blob=await res.blob();const cd=res.headers.get('content-disposition')||'';const m=cd.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i);const name=m?decodeURIComponent(m[1].replace(/"/g,'')):(format==='audio'?'download.mp3':format==='photo'?'download.jpg':'download.mp4');const obj=URL.createObjectURL(blob);const a=document.createElement('a');a.href=obj;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(obj),60000);status('Download started. Check your Downloads folder.');
+ }catch(err){status(err.message+' Check backend deployment/logs and supported URL.',true)}finally{button.disabled=false;button.textContent='Find downloadable media →'}
+});
